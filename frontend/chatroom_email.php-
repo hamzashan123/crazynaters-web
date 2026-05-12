@@ -1,0 +1,255 @@
+<?php
+declare(strict_types=1);
+
+header('Content-Type: application/json');
+
+require __DIR__ . '/vendor/autoload.php';
+
+use Google\Auth\Credentials\ServiceAccountCredentials;
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
+
+const FIREBASE_CREDENTIALS_PATH = __DIR__ . '/firebase-service-account.json';
+const PROJECT_ID = 'chatroom-4ecf4';
+const DASHBOARD_URL = 'https://lightgrey-owl-201683.hostingersite.com/frontend/chat-dashboard.php';
+
+const SMTP_HOST = 'smtp.hostinger.com';
+const SMTP_PORT = 465;
+const SMTP_USERNAME = 'admin@mundiatech.online';
+const SMTP_PASSWORD = '2/y]patC';
+const SMTP_FROM_EMAIL = 'admin@mundiatech.online';
+const SMTP_FROM_NAME = 'Chatroom';
+
+function jsonResponse(array $data, int $status = 200): void {
+    http_response_code($status);
+    echo json_encode($data);
+    exit;
+}
+
+function getPostData(): array {
+    $raw = file_get_contents('php://input');
+    return json_decode($raw ?: '{}', true) ?? [];
+}
+
+function buildQrUrl(string $link): string {
+    return 'https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=' . rawurlencode($link);
+}
+
+function generatePermanentToken(): string {
+    return bin2hex(random_bytes(32));
+}
+
+function getGoogleAccessToken(string $scope = 'https://www.googleapis.com/auth/datastore'): string {
+    $creds = new ServiceAccountCredentials($scope, FIREBASE_CREDENTIALS_PATH);
+    $token = $creds->fetchAuthToken();
+
+    if (empty($token['access_token'])) {
+        throw new RuntimeException('Failed to fetch Google access token.');
+    }
+
+    return $token['access_token'];
+}
+
+function firestoreRequest(string $method, string $url, ?array $payload = null): array {
+    $accessToken = getGoogleAccessToken();
+
+    $ch = curl_init($url);
+
+    $headers = [
+        'Authorization: Bearer ' . $accessToken,
+        'Content-Type: application/json',
+    ];
+
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_CUSTOMREQUEST => $method,
+        CURLOPT_HTTPHEADER => $headers,
+        CURLOPT_TIMEOUT => 30,
+    ]);
+
+    if ($payload !== null) {
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
+    }
+
+    $response = curl_exec($ch);
+    $httpCode = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $curlError = curl_error($ch);
+    curl_close($ch);
+
+    if ($curlError) {
+        throw new RuntimeException('cURL error: ' . $curlError);
+    }
+
+    $data = json_decode($response ?: '{}', true);
+
+    if ($httpCode < 200 || $httpCode >= 300) {
+        $message = $data['error']['message'] ?? $response ?? 'Firestore request failed';
+        throw new RuntimeException('Firestore error: ' . $message);
+    }
+
+    return $data;
+}
+
+function findUserByEmail(string $email): ?array {
+    $url = 'https://firestore.googleapis.com/v1/projects/' . PROJECT_ID . '/databases/(default)/documents:runQuery';
+
+    $payload = [
+        'structuredQuery' => [
+            'from' => [
+                ['collectionId' => 'users']
+            ],
+            'where' => [
+                'fieldFilter' => [
+                    'field' => ['fieldPath' => 'email'],
+                    'op' => 'EQUAL',
+                    'value' => ['stringValue' => $email]
+                ]
+            ],
+            'limit' => 1
+        ]
+    ];
+
+    $results = firestoreRequest('POST', $url, $payload);
+
+    foreach ($results as $row) {
+        if (!empty($row['document'])) {
+            $doc = $row['document'];
+            $fields = $doc['fields'] ?? [];
+            $nameParts = explode('/', $doc['name']);
+            $uid = end($nameParts);
+
+            return [
+                'uid' => $uid,
+                'docName' => $doc['name'],
+                'fields' => $fields,
+            ];
+        }
+    }
+
+    return null;
+}
+
+function patchUserFields(string $uid, array $fields): void {
+    $queryParams = [];
+    foreach (array_keys($fields) as $fieldPath) {
+        $queryParams[] = 'updateMask.fieldPaths=' . rawurlencode($fieldPath);
+    }
+
+    $url = 'https://firestore.googleapis.com/v1/projects/' . PROJECT_ID . '/databases/(default)/documents/users/' . rawurlencode($uid);
+    if (!empty($queryParams)) {
+        $url .= '?' . implode('&', $queryParams);
+    }
+
+    $payload = ['fields' => $fields];
+
+    firestoreRequest('PATCH', $url, $payload);
+}
+
+function getOrCreateLoginToken(string $uid, array $fields): string {
+    $existing = $fields['login_token']['stringValue'] ?? '';
+
+    if ($existing !== '') {
+        return $existing;
+    }
+
+    $newToken = generatePermanentToken();
+
+    patchUserFields($uid, [
+        'login_token' => ['stringValue' => $newToken],
+    ]);
+
+    return $newToken;
+}
+
+function sendEmail(string $toEmail, string $name, string $loginLink, string $qrLink): void {
+    $qrImage = buildQrUrl($qrLink);
+
+    $safeName = htmlspecialchars($name !== '' ? $name : 'User', ENT_QUOTES, 'UTF-8');
+    $safeLoginLink = htmlspecialchars($loginLink, ENT_QUOTES, 'UTF-8');
+    $safeQrLink = htmlspecialchars($qrLink, ENT_QUOTES, 'UTF-8');
+    $safeQrImage = htmlspecialchars($qrImage, ENT_QUOTES, 'UTF-8');
+
+    $html = "
+        <div style='font-family:Arial,sans-serif;max-width:620px;margin:0 auto;padding:24px;background:#f6f8fb;'>
+            <div style='background:#ffffff;padding:28px;border-radius:14px;box-shadow:0 8px 28px rgba(0,0,0,0.08);'>
+                <h2 style='margin-top:0;'>Quick Login</h2>
+                <p>Hello {$safeName},</p>
+                <p>Click the button below to login instantly:</p>
+                <p>
+                    <a href='{$safeLoginLink}' style='display:inline-block;padding:12px 22px;background:#0d6efd;color:#ffffff;text-decoration:none;border-radius:8px;font-weight:700;'>
+                        Login Now
+                    </a>
+                </p>
+                <p>Or scan this QR code:</p>
+                <p>
+                    <img src='{$safeQrImage}' width='220' alt='QR Code' style='border:1px solid #e5e7eb;border-radius:10px;padding:8px;background:#fff;'>
+                </p>
+                <p style='font-size:13px;color:#666;'>Direct login link:</p>
+                <p style='font-size:13px;word-break:break-all;'>{$safeQrLink}</p>
+            </div>
+        </div>
+    ";
+
+    $mail = new PHPMailer(true);
+
+    $mail->isSMTP();
+    $mail->Host = SMTP_HOST;
+    $mail->SMTPAuth = true;
+    $mail->Username = SMTP_USERNAME;
+    $mail->Password = SMTP_PASSWORD;
+    $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
+    $mail->Port = SMTP_PORT;
+    $mail->CharSet = 'UTF-8';
+
+    $mail->SMTPOptions = [
+        'ssl' => [
+            'verify_peer' => false,
+            'verify_peer_name' => false,
+            'allow_self_signed' => true
+        ]
+    ];
+
+    $mail->setFrom(SMTP_FROM_EMAIL, SMTP_FROM_NAME);
+    $mail->addAddress($toEmail, $name !== '' ? $name : $toEmail);
+
+    $mail->isHTML(true);
+    $mail->Subject = 'Quick Login';
+    $mail->Body = $html;
+
+    $mail->send();
+}
+
+try {
+    $data = getPostData();
+    $email = trim((string)($data['email'] ?? ''));
+    $name = trim((string)($data['name'] ?? 'User'));
+
+    if ($email === '') {
+        jsonResponse(['success' => false, 'error' => 'Email required'], 400);
+    }
+
+    $user = findUserByEmail($email);
+
+    if (!$user) {
+        jsonResponse(['success' => false, 'error' => 'No registered user found with this email.'], 404);
+    }
+
+    if (($user['fields']['is_banned']['booleanValue'] ?? false) === true) {
+        jsonResponse(['success' => false, 'error' => 'You are banned.'], 403);
+    }
+
+    $loginToken = getOrCreateLoginToken($user['uid'], $user['fields']);
+    $loginLink = DASHBOARD_URL . '?login_token=' . urlencode($loginToken);
+
+    sendEmail($email, $name, $loginLink, $loginLink);
+
+    jsonResponse([
+        'success' => true,
+        'message' => 'Quick login email sent successfully.'
+    ]);
+} catch (Throwable $e) {
+    jsonResponse([
+        'success' => false,
+        'error' => $e->getMessage()
+    ], 500);
+}

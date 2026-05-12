@@ -1,0 +1,7 @@
+{
+    "require": {
+        "kreait/firebase-php": "^5.26",
+        "phpmailer/phpmailer": "^7.0",
+        "google/auth": "^1.50"
+    }
+}

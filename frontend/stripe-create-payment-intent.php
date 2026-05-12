@@ -18,7 +18,7 @@ $uid = isset($input['uid']) ? trim((string) $input['uid']) : '';
 //     exit;
 // }
 
-$stripeSecretKey = 'sk_test_brh3yKTVYGz3N5YH59FnoA2500388xTj95';
+
 
 $payload = [
     'amount' => $amount,

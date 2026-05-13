@@ -1046,7 +1046,7 @@ include('includes/header.php');
     .message-meta { color: #00e5ff; }
     .message-own .message-meta { color: #fff; }
     .message-avatar, .message-avatar-fallback, .current-user-avatar, .current-user-avatar-fallback { border: 1px solid rgba(0, 229, 255, 0.55); box-shadow: 0 0 14px rgba(0, 229, 255, 0.16); }
-    .auth-entry-overlay { background: rgba(2, 8, 36, 0.62); backdrop-filter: blur(8px); }
+    .auth-entry-overlay { background: rgba(2, 8, 36, 0.62); backdrop-filter: blur(8px); height: 100% !important; top: 0; }
     .auth-entry-card { background: linear-gradient(180deg, rgba(15, 34, 109, 0.94), rgba(8, 19, 78, 0.96)); border: 1px solid rgba(0,229,255,.32); color: #fff; box-shadow: 0 0 36px rgba(0, 229, 255, 0.16); }
     .auth-entry-card .btn-primary, .modal-content .btn-primary { border: 0; background: linear-gradient(135deg, #006dff, #9a20ff) !important; box-shadow: 0 0 22px rgba(35, 112, 255, 0.28); font-weight: 700; }
     .auth-entry-card .btn-outline-primary, .modal-content .btn-outline-primary { color: #d9e7ff; border-color: rgba(0,229,255,.45); background: rgba(14, 28, 93, 0.55); }
@@ -1746,8 +1746,7 @@ body {
 .auth-entry-overlay {
     background: rgba(0, 7, 27, .7) !important;
     backdrop-filter: blur(6px);
-    height: 100% !important;
-    top: 0;
+    
 }
 
 @media (max-width: 991px) {

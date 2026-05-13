@@ -7,7 +7,7 @@
 (function () {
     'use strict';
 
-    const TOKEN_ENDPOINT = 'https://darkseagreen-snail-591301.hostingersite.com/get-token';
+    const TOKEN_ENDPOINT = 'https://chat.crazynaters.com/crazynaters-call-backend/get-token';
 
     const {
         Room,

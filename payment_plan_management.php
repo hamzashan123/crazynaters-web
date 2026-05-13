@@ -307,12 +307,12 @@ include('includes/header.php');
     } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
     const firebaseConfig = {
-        apiKey: "AIzaSyD_X8hJzryCHrlC8BgO4wExzHzmnIJCBOI",
-        authDomain: "chatroom-4ecf4.firebaseapp.com",
-        projectId: "chatroom-4ecf4",
-        storageBucket: "chatroom-4ecf4.firebasestorage.app",
-        messagingSenderId: "19724728120",
-        appId: "1:19724728120:web:a61bc3d3986b15d58a73cd"
+        apiKey: "<?= $_ENV['FIREBASE_API_KEY'] ?>",
+        authDomain: "<?= $_ENV['FIREBASE_AUTH_DOMAIN'] ?>",
+        projectId: "<?= $_ENV['FIREBASE_PROJECT_ID'] ?>",
+        storageBucket: "<?= $_ENV['FIREBASE_STORAGE_BUCKET'] ?>",
+        messagingSenderId: "<?= $_ENV['FIREBASE_MESSAGING_SENDER_ID'] ?>",
+        appId: "<?= $_ENV['FIREBASE_APP_ID'] ?>"
     };
 
     const app = initializeApp(firebaseConfig);

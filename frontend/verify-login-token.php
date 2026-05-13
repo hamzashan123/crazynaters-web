@@ -3,13 +3,17 @@ declare(strict_types=1);
 
 header('Content-Type: application/json');
 
+require_once __DIR__ . '/../bootstrap.php';
+
 require __DIR__ . '/vendor/autoload.php';
+
 
 use Google\Auth\Credentials\ServiceAccountCredentials;
 use Kreait\Firebase\Factory;
 
 const FIREBASE_CREDENTIALS_PATH = __DIR__ . '/firebase-service-account.json';
-const PROJECT_ID = 'chatroom-4ecf4';
+define('PROJECT_ID', $_ENV['FIREBASE_PROJECT_ID']);
+
 
 function jsonResponse(array $data, int $status = 200): void
 {

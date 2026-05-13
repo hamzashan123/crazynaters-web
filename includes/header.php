@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . '/../bootstrap.php';
+
 session_start();
 
 // Redirect to login if not logged in

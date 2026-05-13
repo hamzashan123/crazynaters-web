@@ -1,6 +1,8 @@
 <?php
 header('Content-Type: application/json');
 
+require_once __DIR__ . '/bootstrap.php';
+
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
     echo json_encode(['error' => 'Method not allowed']);
@@ -17,7 +19,7 @@ $uid = isset($input['uid']) ? trim((string) $input['uid']) : '';
 //     echo json_encode(['error' => 'Invalid plan amount']);
 //     exit;
 // }
-$stripeSecretKey = 'sk_test_brh3yKTVYGz3N5YH59FnoA2500388xTj95';
+$stripeSecretKey = $_ENV['STRIPE_SECRET_KEY'];
 
 
 $payload = [

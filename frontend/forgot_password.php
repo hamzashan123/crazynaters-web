@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 header('Content-Type: application/json');
 
+require_once __DIR__ . '/../bootstrap.php';
+
 require __DIR__ . '/vendor/autoload.php';
 
 use Google\Auth\Credentials\ServiceAccountCredentials;
@@ -10,13 +12,6 @@ use PHPMailer\PHPMailer\PHPMailer;
 
 const FIREBASE_CREDENTIALS_PATH = __DIR__ . '/firebase-service-account.json';
 const DASHBOARD_RESET_URL = 'https://lightgrey-owl-201683.hostingersite.com/frontend/chat-dashboard.php';
-
-const SMTP_HOST = 'smtp.hostinger.com';
-const SMTP_PORT = 465;
-const SMTP_USERNAME = 'admin@mundiatech.online';
-const SMTP_PASSWORD = '2/y]patC';
-const SMTP_FROM_EMAIL = 'admin@mundiatech.online';
-const SMTP_FROM_NAME = 'CrazyNaters';
 
 function jsonResponse(array $data, int $status = 200): void {
     http_response_code($status);
@@ -113,12 +108,12 @@ function sendResetEmail(string $toEmail, string $resetLink): void {
 
     $mail = new PHPMailer(true);
     $mail->isSMTP();
-    $mail->Host = SMTP_HOST;
+    $mail->Host = $_ENV['SMTP_HOST'];
     $mail->SMTPAuth = true;
-    $mail->Username = SMTP_USERNAME;
-    $mail->Password = SMTP_PASSWORD;
+    $mail->Username = $_ENV['SMTP_USERNAME'];
+    $mail->Password = $_ENV['SMTP_PASSWORD'];
     $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
-    $mail->Port = SMTP_PORT;
+    $mail->Port = (int) $_ENV['SMTP_PORT'];
 
     $mail->SMTPOptions = [
         'ssl' => [
@@ -128,7 +123,7 @@ function sendResetEmail(string $toEmail, string $resetLink): void {
         ]
     ];
 
-    $mail->setFrom(SMTP_FROM_EMAIL, SMTP_FROM_NAME);
+    $mail->setFrom($_ENV['SMTP_FROM_EMAIL'], $_ENV['SMTP_FROM_NAME']);
     $mail->addAddress($toEmail);
 
     $mail->isHTML(true);

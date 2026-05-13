@@ -4625,16 +4625,16 @@ body .chat-panel-card #textComposerWrap .send-airplane-btn {
     } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
 
     const firebaseConfig = {
-        apiKey: "AIzaSyD_X8hJzryCHrlC8BgO4wExzHzmnIJCBOI",
-        authDomain: "chatroom-4ecf4.firebaseapp.com",
-        projectId: "chatroom-4ecf4",
-        storageBucket: "chatroom-4ecf4.firebasestorage.app",
-        messagingSenderId: "19724728120",
-        appId: "1:19724728120:web:a61bc3d3986b15d58a73cd"
+        apiKey: "<?= $_ENV['FIREBASE_API_KEY'] ?>",
+        authDomain: "<?= $_ENV['FIREBASE_AUTH_DOMAIN'] ?>",
+        projectId: "<?= $_ENV['FIREBASE_PROJECT_ID'] ?>",
+        storageBucket: "<?= $_ENV['FIREBASE_STORAGE_BUCKET'] ?>",
+        messagingSenderId: "<?= $_ENV['FIREBASE_MESSAGING_SENDER_ID'] ?>",
+        appId: "<?= $_ENV['FIREBASE_APP_ID'] ?>"
     };
 
-    const CLOUDINARY_CLOUD_NAME = "dyqeg4xdu";
-    const CLOUDINARY_UPLOAD_PRESET = "crazynaters";
+    const CLOUDINARY_CLOUD_NAME = "<?= $_ENV['CLOUDINARY_CLOUD_NAME'] ?>";
+    const CLOUDINARY_UPLOAD_PRESET = "<?= $_ENV['CLOUDINARY_UPLOAD_PRESET'] ?>";
     const CLOUDINARY_IMAGE_UPLOAD_URL = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`;
     const CLOUDINARY_VIDEO_UPLOAD_URL = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/video/upload`;
     const CLOUDINARY_AUTO_UPLOAD_URL = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/auto/upload`;
@@ -4643,7 +4643,7 @@ body .chat-panel-card #textComposerWrap .send-airplane-btn {
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     const auth = getAuth(app);
-    const QUICK_LOGIN_LANDING_URL = 'https://lightgrey-owl-201683.hostingersite.com/frontend/chat-dashboard.php';
+    const QUICK_LOGIN_LANDING_URL = "<?= $_ENV['QUICK_LOGIN_LANDING_URL'] ?>";
 
     const roomList = document.getElementById('roomList');
     const voiceRoomList = document.getElementById('voiceRoomList');
@@ -4742,7 +4742,8 @@ body .chat-panel-card #textComposerWrap .send-airplane-btn {
     const dynamicPaymentPlansList = document.getElementById('dynamicPaymentPlansList');
     const paymentPlansLoading = document.getElementById('paymentPlansLoading');
     let paymentPlanBtns = [];
-    const STRIPE_PUBLISHABLE_KEY = 'pk_test_w30dVAoGVlicUD5W814WQmFE00NdHpXmQt';
+    // const STRIPE_PUBLISHABLE_KEY = 'pk_test_w30dVAoGVlicUD5W814WQmFE00NdHpXmQt';
+    const STRIPE_PUBLISHABLE_KEY = "<?= $_ENV['STRIPE_PUBLISHABLE_KEY'] ?>";
     const stripe = window.Stripe ? Stripe(STRIPE_PUBLISHABLE_KEY) : null;
 
     let currentUser = null;

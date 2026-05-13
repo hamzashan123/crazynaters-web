@@ -250,7 +250,7 @@ try {
 
     $loginLink = $baseUrl . '?login_token=' . urlencode($loginToken);
 
-    sendEmail($email, $name, $loginLink,$loginToken);
+    // sendEmail($email, $name, $loginLink,$loginToken);
 
     jsonResponse([
         'success' => true,

@@ -206,7 +206,8 @@ function sendEmail(string $toEmail, string $name, string $loginLink, string $log
     $mail->SMTPAuth = true;
     $mail->Username = $_ENV['SMTP_USERNAME'];
     $mail->Password = $_ENV['SMTP_PASSWORD'];
-    $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
+    // $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
+    $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
     $mail->Port = (int) $_ENV['SMTP_PORT'];
     
 

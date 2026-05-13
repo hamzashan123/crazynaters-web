@@ -2,3 +2,4 @@
 /vendor
 crazynaters-web-env.zip
 frontend/firebase-service-account.json
+crazynaters-call-backend/node_modules

@@ -4582,7 +4582,9 @@ body .chat-panel-card #textComposerWrap .send-airplane-btn {
     }
 }
 
-
+div#paymentCardElement {
+    background: white !important;
+}
 
 
 </style>

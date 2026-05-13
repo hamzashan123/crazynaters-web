@@ -1746,6 +1746,8 @@ body {
 .auth-entry-overlay {
     background: rgba(0, 7, 27, .7) !important;
     backdrop-filter: blur(6px);
+    height: 100% !important;
+    top: 0;
 }
 
 @media (max-width: 991px) {

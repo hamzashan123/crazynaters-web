@@ -12,7 +12,7 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static("public"));
 
-app.post("/get-token", async (req, res) => {
+app.post("https://chat.crazynaters.com/crazynaters-call-backend/get-token", async (req, res) => {
   try {
     const { identity, roomName } = req.body;
 

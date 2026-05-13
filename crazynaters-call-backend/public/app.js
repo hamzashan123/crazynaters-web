@@ -42,7 +42,7 @@ async function joinCall() {
     joinBtn.disabled = true;
     setStatus("Getting token...");
 
-    const response = await fetch("/get-token", {
+    const response = await fetch("/crazynaters-call-backend/get-token", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ identity: username, roomName }),

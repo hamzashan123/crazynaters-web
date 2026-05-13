@@ -11,7 +11,8 @@ use Google\Auth\Credentials\ServiceAccountCredentials;
 use PHPMailer\PHPMailer\PHPMailer;
 
 const FIREBASE_CREDENTIALS_PATH = __DIR__ . '/firebase-service-account.json';
-const DASHBOARD_RESET_URL = 'https://lightgrey-owl-201683.hostingersite.com/frontend/chat-dashboard.php';
+define('DASHBOARD_RESET_URL', $_ENV['DASHBOARD_URL']);
+// const DASHBOARD_RESET_URL = 'https://lightgrey-owl-201683.hostingersite.com/frontend/chat-dashboard.php';
 
 function jsonResponse(array $data, int $status = 200): void {
     http_response_code($status);

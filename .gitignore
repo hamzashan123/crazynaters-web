@@ -1,3 +1,4 @@
 .env
 /vendor
+crazynaters-web-env.zip
 frontend/firebase-service-account.json

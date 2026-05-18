@@ -1746,7 +1746,7 @@ body {
 .auth-entry-overlay {
     background: rgba(0, 7, 27, .7) !important;
     backdrop-filter: blur(6px);
-    
+
 }
 
 @media (max-width: 991px) {
@@ -4577,7 +4577,7 @@ body .chat-panel-card #textComposerWrap .send-airplane-btn {
         max-width: 380px !important;
         height: 340px !important;
     }
-    
+
     button#voicePrevBtn {
         display:none !important;
     }
@@ -4651,6 +4651,9 @@ div#paymentCardElement {
     const db = getFirestore(app);
     const auth = getAuth(app);
     const QUICK_LOGIN_LANDING_URL = "<?= $_ENV['QUICK_LOGIN_LANDING_URL'] ?>";
+    const initialUrlParams = new URLSearchParams(window.location.search);
+    const initialRoomIdFromUrl = (initialUrlParams.get('room_id') || '').trim();
+    const initialRoomTypeFromUrl = (initialUrlParams.get('room_type') || initialUrlParams.get('type') || '').trim().toLowerCase();
 
     const roomList = document.getElementById('roomList');
     const voiceRoomList = document.getElementById('voiceRoomList');
@@ -4908,6 +4911,10 @@ div#paymentCardElement {
 
     let currentTextSearch = '';
     let currentVoiceSearch = '';
+    let initialUrlRoomHandled = !initialRoomIdFromUrl;
+    let initialUrlRoomResolving = false;
+    let textRoomsLoaded = false;
+    let voiceRoomsLoaded = false;
 
     let latestTextDocs = [];
     let latestVoiceDocs = [];
@@ -5939,7 +5946,7 @@ div#paymentCardElement {
             }
             else {
                 createRoomBtn.classList.add('d-none');
-            }
+}
         }
 
         cacheCallProfile(currentUser.uid, getCurrentCallProfile() || {});
@@ -6752,6 +6759,87 @@ div#paymentCardElement {
             (room.room_id || '').toLowerCase().includes(q) ||
             (room.last_voice_message_by || '').toLowerCase().includes(q)
         );
+    }
+
+    function addRoomToCacheIfMissing(cache, roomData) {
+        if (!roomData || !roomData.room_id) return cache;
+        const existingIndex = cache.findIndex(room => room.room_id === roomData.room_id);
+        if (existingIndex >= 0) {
+            const nextCache = [...cache];
+            nextCache[existingIndex] = { ...nextCache[existingIndex], ...roomData };
+            return nextCache;
+        }
+        return [roomData, ...cache];
+    }
+
+    async function resolveRoomByUrlParam(collectionName, cache) {
+        if (!initialRoomIdFromUrl) return null;
+
+        const cachedRoom = cache.find(room => room.room_id === initialRoomIdFromUrl);
+        if (cachedRoom) return cachedRoom;
+
+        try {
+            const roomSnap = await getDoc(doc(db, collectionName, initialRoomIdFromUrl));
+            if (!roomSnap.exists()) return null;
+
+            const data = roomSnap.data() || {};
+            if (data.is_active === false) return null;
+
+            return {
+                ...data,
+                room_id: data.room_id || roomSnap.id
+            };
+        } catch (error) {
+            console.error(`URL room lookup failed for ${collectionName}:`, error);
+            return null;
+        }
+    }
+
+    async function openInitialRoomFromUrl() {
+        if (initialUrlRoomHandled || initialUrlRoomResolving || !initialRoomIdFromUrl) return;
+
+        initialUrlRoomResolving = true;
+
+        try {
+            const preferVoice = initialRoomTypeFromUrl === 'voice' || initialRoomTypeFromUrl === 'voice_chatroom';
+            const preferText = initialRoomTypeFromUrl === 'text' || initialRoomTypeFromUrl === 'chatroom';
+
+            if (!preferVoice) {
+                const textRoom = await resolveRoomByUrlParam('chatrooms', textRoomsCache);
+                if (textRoom) {
+                    textRoomsCache = addRoomToCacheIfMissing(textRoomsCache, textRoom);
+                    renderTextRooms(getFilteredTextRooms());
+                    initialUrlRoomHandled = true;
+                    closeMobileDrawers();
+                    await loadSelectedTextRoom(textRoom.room_id);
+                    scrollMobileThreadToBottom(450);
+                    return;
+                }
+            }
+
+            if (!preferText) {
+                const voiceRoom = await resolveRoomByUrlParam('voice_chatrooms', voiceRoomsCache);
+                if (voiceRoom) {
+                    voiceRoomsCache = addRoomToCacheIfMissing(voiceRoomsCache, voiceRoom);
+                    renderVoiceRooms(getFilteredVoiceRooms());
+                    initialUrlRoomHandled = true;
+                    closeMobileDrawers();
+                    await loadSelectedVoiceRoom(voiceRoom.room_id);
+                    scrollMobileThreadToBottom(450);
+                    return;
+                }
+            }
+
+            if (textRoomsLoaded && voiceRoomsLoaded) {
+                initialUrlRoomHandled = true;
+                if (!activeMode && textRoomsCache.length > 0) {
+                    await loadSelectedTextRoom(textRoomsCache[0].room_id);
+                    scrollMobileThreadToBottom(450);
+                }
+            }
+        } finally {
+            initialUrlRoomResolving = false;
+        }
     }
 
     function renderTextRooms(rooms) {
@@ -8394,16 +8482,22 @@ div#paymentCardElement {
         limit(10)
     );
 
-    onSnapshot(textRoomsQuery, (snapshot) => {
-        textRoomsCache = snapshot.docs.map(docSnap => docSnap.data());
+    onSnapshot(textRoomsQuery, async (snapshot) => {
+        textRoomsLoaded = true;
+        textRoomsCache = snapshot.docs.map(docSnap => ({ ...docSnap.data(), room_id: docSnap.data().room_id || docSnap.id }));
         renderTextRooms(getFilteredTextRooms());
         updateActiveComposerAccess();
+
+        if (initialRoomIdFromUrl && !initialUrlRoomHandled) {
+            await openInitialRoomFromUrl();
+            if (!initialUrlRoomHandled) return;
+        }
 
         if (!activeMode && textRoomsCache.length > 0) {
             loadSelectedTextRoom(textRoomsCache[0].room_id);
         } else if (activeMode === 'text' && selectedTextRoomId) {
             const exists = textRoomsCache.find(room => room.room_id === selectedTextRoomId);
-            if (!exists && textRoomsCache.length > 0) {
+            if (!exists && textRoomsCache.length > 0 && !initialRoomIdFromUrl) {
                 loadSelectedTextRoom(textRoomsCache[0].room_id);
             } else {
                 renderTextRooms(getFilteredTextRooms());
@@ -8421,14 +8515,20 @@ div#paymentCardElement {
         limit(10)
     );
 
-    onSnapshot(voiceRoomsQuery, (snapshot) => {
-        voiceRoomsCache = snapshot.docs.map(docSnap => docSnap.data());
+    onSnapshot(voiceRoomsQuery, async (snapshot) => {
+        voiceRoomsLoaded = true;
+        voiceRoomsCache = snapshot.docs.map(docSnap => ({ ...docSnap.data(), room_id: docSnap.data().room_id || docSnap.id }));
         renderVoiceRooms(getFilteredVoiceRooms());
         updateActiveComposerAccess();
 
+        if (initialRoomIdFromUrl && !initialUrlRoomHandled) {
+            await openInitialRoomFromUrl();
+            if (!initialUrlRoomHandled) return;
+        }
+
         if (activeMode === 'voice' && selectedVoiceRoomId) {
             const exists = voiceRoomsCache.find(room => room.room_id === selectedVoiceRoomId);
-            if (!exists && voiceRoomsCache.length > 0) {
+            if (!exists && voiceRoomsCache.length > 0 && !initialRoomIdFromUrl) {
                 loadSelectedVoiceRoom(voiceRoomsCache[0].room_id);
             } else {
                 renderVoiceRooms(getFilteredVoiceRooms());

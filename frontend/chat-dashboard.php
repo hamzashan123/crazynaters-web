@@ -4668,7 +4668,7 @@ div#paymentCardElement {
     function shouldReplaceCurrentRoomUrl(nextRoomId) {
         const currentUrl = new URL(window.location.href);
         const currentRoomId = currentUrl.searchParams.get('room_id') || '';
-        const isInternalMobilePath = /\/frontend\/chat-mobile\.php$/i.test(currentUrl.pathname);
+        const isInternalMobilePath = /\/frontend\/chat-dashboard\.php$/i.test(currentUrl.pathname);
 
         return !currentRoomId || currentRoomId === nextRoomId || isInternalMobilePath;
     }

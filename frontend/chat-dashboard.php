@@ -2125,6 +2125,11 @@ footer,
         min-height: 100dvh;
     }
 
+    div#voiceCallControls {
+        position: fixed;
+        right: 15px;
+    }
+
     .container-fluid.py-3,
     body > .container-fluid {
         padding: 10px !important;

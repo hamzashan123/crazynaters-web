@@ -11,7 +11,7 @@
             /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
             window.innerWidth <= 1024;
 
-        return isMobileOrTablet ? "frontend/mobile.php" : "frontend/chat-dashboard.php";
+        return isMobileOrTablet ? "frontend/chat-dashboard.php" : "frontend/chat-dashboard.php";
     }
 
     function switchPageIfNeeded() {

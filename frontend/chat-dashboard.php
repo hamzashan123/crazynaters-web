@@ -2118,7 +2118,7 @@ footer,
 /* ===== Mobile responsive experience - desktop remains unchanged ===== */
 @media (max-width: 991.98px) {
     html, body {
-        overflow-x: hidden !important;
+        overflow: hidden !important;
     }
 
     body {

@@ -4650,10 +4650,49 @@ div#paymentCardElement {
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     const auth = getAuth(app);
-    const QUICK_LOGIN_LANDING_URL = "<?= $_ENV['QUICK_LOGIN_LANDING_URL'] ?>";
+    const MOBILE_PUBLIC_BASE_URL = `${window.location.origin}/`;
+    const QUICK_LOGIN_LANDING_URL = MOBILE_PUBLIC_BASE_URL;
     const initialUrlParams = new URLSearchParams(window.location.search);
     const initialRoomIdFromUrl = (initialUrlParams.get('room_id') || '').trim();
     const initialRoomTypeFromUrl = (initialUrlParams.get('room_type') || initialUrlParams.get('type') || '').trim().toLowerCase();
+
+    function buildMobileRoomUrl(roomId) {
+        const cleanRoomId = (roomId || '').trim();
+        if (!cleanRoomId) return MOBILE_PUBLIC_BASE_URL;
+
+        const params = new URLSearchParams();
+        params.set('room_id', cleanRoomId);
+        return `${MOBILE_PUBLIC_BASE_URL}?${params.toString()}`;
+    }
+
+    function shouldReplaceCurrentRoomUrl(nextRoomId) {
+        const currentUrl = new URL(window.location.href);
+        const currentRoomId = currentUrl.searchParams.get('room_id') || '';
+        const isInternalMobilePath = /\/frontend\/chat-mobile\.php$/i.test(currentUrl.pathname);
+
+        return !currentRoomId || currentRoomId === nextRoomId || isInternalMobilePath;
+    }
+
+    function updateMobileRoomUrl(roomId, mode = 'auto') {
+        const cleanRoomId = (roomId || '').trim();
+        if (!cleanRoomId || !window.history || !window.history.pushState) return;
+
+        const nextUrl = buildMobileRoomUrl(cleanRoomId);
+        if (window.location.href === nextUrl) return;
+
+        const useReplace = mode === 'replace' || (mode === 'auto' && shouldReplaceCurrentRoomUrl(cleanRoomId));
+        const state = { room_id: cleanRoomId };
+
+        if (useReplace) {
+            window.history.replaceState(state, document.title, nextUrl);
+        } else {
+            window.history.pushState(state, document.title, nextUrl);
+        }
+    }
+
+    if (initialRoomIdFromUrl) {
+        updateMobileRoomUrl(initialRoomIdFromUrl, 'replace');
+    }
 
     const roomList = document.getElementById('roomList');
     const voiceRoomList = document.getElementById('voiceRoomList');
@@ -6811,7 +6850,7 @@ div#paymentCardElement {
                     renderTextRooms(getFilteredTextRooms());
                     initialUrlRoomHandled = true;
                     closeMobileDrawers();
-                    await loadSelectedTextRoom(textRoom.room_id);
+                    await loadSelectedTextRoom(textRoom.room_id, 'replace');
                     scrollMobileThreadToBottom(450);
                     return;
                 }
@@ -6824,7 +6863,7 @@ div#paymentCardElement {
                     renderVoiceRooms(getFilteredVoiceRooms());
                     initialUrlRoomHandled = true;
                     closeMobileDrawers();
-                    await loadSelectedVoiceRoom(voiceRoom.room_id);
+                    await loadSelectedVoiceRoom(voiceRoom.room_id, 'replace');
                     scrollMobileThreadToBottom(450);
                     return;
                 }
@@ -6833,7 +6872,7 @@ div#paymentCardElement {
             if (textRoomsLoaded && voiceRoomsLoaded) {
                 initialUrlRoomHandled = true;
                 if (!activeMode && textRoomsCache.length > 0) {
-                    await loadSelectedTextRoom(textRoomsCache[0].room_id);
+                    await loadSelectedTextRoom(textRoomsCache[0].room_id, 'replace');
                     scrollMobileThreadToBottom(450);
                 }
             }
@@ -7241,7 +7280,8 @@ div#paymentCardElement {
         else if (activeMode === 'voice') await loadOlderVoiceMessages();
     });
 
-    async function loadSelectedTextRoom(roomId) {
+    async function loadSelectedTextRoom(roomId, urlMode = 'auto') {
+        updateMobileRoomUrl(roomId, urlMode);
         if (currentLoadedTextRoomId === roomId && activeMode === 'text') return;
 
         currentLoadedTextRoomId = roomId;
@@ -7295,7 +7335,8 @@ div#paymentCardElement {
         });
     }
 
-    async function loadSelectedVoiceRoom(roomId) {
+    async function loadSelectedVoiceRoom(roomId, urlMode = 'auto') {
+        updateMobileRoomUrl(roomId, urlMode);
         if (currentLoadedVoiceRoomId === roomId && activeMode === 'voice') return;
 
         currentLoadedVoiceRoomId = roomId;
@@ -8494,11 +8535,11 @@ div#paymentCardElement {
         }
 
         if (!activeMode && textRoomsCache.length > 0) {
-            loadSelectedTextRoom(textRoomsCache[0].room_id);
+            loadSelectedTextRoom(textRoomsCache[0].room_id, 'replace');
         } else if (activeMode === 'text' && selectedTextRoomId) {
             const exists = textRoomsCache.find(room => room.room_id === selectedTextRoomId);
             if (!exists && textRoomsCache.length > 0 && !initialRoomIdFromUrl) {
-                loadSelectedTextRoom(textRoomsCache[0].room_id);
+                loadSelectedTextRoom(textRoomsCache[0].room_id, 'replace');
             } else {
                 renderTextRooms(getFilteredTextRooms());
             }
@@ -8529,7 +8570,7 @@ div#paymentCardElement {
         if (activeMode === 'voice' && selectedVoiceRoomId) {
             const exists = voiceRoomsCache.find(room => room.room_id === selectedVoiceRoomId);
             if (!exists && voiceRoomsCache.length > 0 && !initialRoomIdFromUrl) {
-                loadSelectedVoiceRoom(voiceRoomsCache[0].room_id);
+                loadSelectedVoiceRoom(voiceRoomsCache[0].room_id, 'replace');
             } else {
                 renderVoiceRooms(getFilteredVoiceRooms());
             }

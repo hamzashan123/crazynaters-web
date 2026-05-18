@@ -4650,27 +4650,26 @@ div#paymentCardElement {
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     const auth = getAuth(app);
-    const MOBILE_PUBLIC_BASE_URL = `${window.location.origin}/`;
-    const QUICK_LOGIN_LANDING_URL = MOBILE_PUBLIC_BASE_URL;
+    const MOBILE_CURRENT_PAGE_URL = `${window.location.origin}${window.location.pathname}`;
+    const QUICK_LOGIN_LANDING_URL = MOBILE_CURRENT_PAGE_URL;
     const initialUrlParams = new URLSearchParams(window.location.search);
     const initialRoomIdFromUrl = (initialUrlParams.get('room_id') || '').trim();
     const initialRoomTypeFromUrl = (initialUrlParams.get('room_type') || initialUrlParams.get('type') || '').trim().toLowerCase();
 
     function buildMobileRoomUrl(roomId) {
         const cleanRoomId = (roomId || '').trim();
-        if (!cleanRoomId) return MOBILE_PUBLIC_BASE_URL;
+        if (!cleanRoomId) return MOBILE_CURRENT_PAGE_URL;
 
         const params = new URLSearchParams();
         params.set('room_id', cleanRoomId);
-        return `${MOBILE_PUBLIC_BASE_URL}?${params.toString()}`;
+        return `${MOBILE_CURRENT_PAGE_URL}?${params.toString()}`;
     }
 
     function shouldReplaceCurrentRoomUrl(nextRoomId) {
         const currentUrl = new URL(window.location.href);
         const currentRoomId = currentUrl.searchParams.get('room_id') || '';
-        const isInternalMobilePath = /\/frontend\/chat-dashboard\.php$/i.test(currentUrl.pathname);
 
-        return !currentRoomId || currentRoomId === nextRoomId || isInternalMobilePath;
+        return !currentRoomId || currentRoomId === nextRoomId;
     }
 
     function updateMobileRoomUrl(roomId, mode = 'auto') {
@@ -4688,10 +4687,6 @@ div#paymentCardElement {
         } else {
             window.history.pushState(state, document.title, nextUrl);
         }
-    }
-
-    if (initialRoomIdFromUrl) {
-        updateMobileRoomUrl(initialRoomIdFromUrl, 'replace');
     }
 
     const roomList = document.getElementById('roomList');
@@ -4792,7 +4787,7 @@ div#paymentCardElement {
     const paymentPlansLoading = document.getElementById('paymentPlansLoading');
     let paymentPlanBtns = [];
     // const STRIPE_PUBLISHABLE_KEY = 'pk_test_w30dVAoGVlicUD5W814WQmFE00NdHpXmQt';
-    const STRIPE_PUBLISHABLE_KEY = "<?= $_ENV['STRIPE_PUBLISHABLE_KEY'] ?>";
+const STRIPE_PUBLISHABLE_KEY = "<?= $_ENV['STRIPE_PUBLISHABLE_KEY'] ?>";
     const stripe = window.Stripe ? Stripe(STRIPE_PUBLISHABLE_KEY) : null;
 
     let currentUser = null;

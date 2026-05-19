@@ -17,7 +17,7 @@
 </div>
 
 
-<script src="/frontend/assets/js/audio-call.js"></script>
+<script src="./frontend/assets/js/audio-call.js"></script>
 
 </body>
 

@@ -4835,14 +4835,14 @@ div#paymentCardElement {
         closeMobileDrawers();
         document.body.classList.add('mobile-chat-drawer-open');
         setMobileNavActive(mobileChatroomsBtn);
-        setTimeout(() => textRoomSearch?.focus(), 180);
+        // setTimeout(() => textRoomSearch?.focus(), 180);
     }
 
     function openMobileVoiceDrawer() {
         closeMobileDrawers();
         document.body.classList.add('mobile-voice-drawer-open');
         setMobileNavActive(mobileVoiceBtn);
-        // setTimeout(() => mobileVoiceRoomSearch?.focus(), 180);
+        setTimeout(() => mobileVoiceRoomSearch?.focus(), 180);
     }
 
     function scrollMobileThreadToBottom(delay = 220) {

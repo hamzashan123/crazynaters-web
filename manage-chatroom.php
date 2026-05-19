@@ -60,7 +60,7 @@ include('includes/header.php');
     <div class="shadow mt-4 p-4 bg-white rounded">
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h2 class="mb-0">Text Chatrooms</h2>
-            <a href="frontend/chat-dashboard.php" target="_blank" class="btn btn-sm btn-info">Open Chat Dashboard</a>
+            <a href="index.php" target="_blank" class="btn btn-sm btn-info">Open Chat Dashboard</a>
         </div>
 
         <div class="table-responsive">
@@ -89,7 +89,7 @@ include('includes/header.php');
     <div class="shadow mt-4 p-4 bg-white rounded mb-4">
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h2 class="mb-0">Voice Chatrooms</h2>
-            <a href="frontend/chat-dashboard.php" target="_blank" class="btn btn-sm btn-warning">Open Voice Dashboard</a>
+            <a href="index.php" target="_blank" class="btn btn-sm btn-warning">Open Voice Dashboard</a>
         </div>
 
         <div class="table-responsive">
@@ -574,7 +574,7 @@ include('includes/header.php');
                         <td>${escapeHtml(room.last_message || '-')}</td>
                         <td>${escapeHtml(formatDateTime(room.created_at))}</td>
                         <td class="text-center">
-                            <a href="frontend/chat-dashboard.php" target="_blank" class="btn btn-sm btn-info">Open</a>
+                            <a href="index.php" target="_blank" class="btn btn-sm btn-info">Open</a>
                             <button class="btn btn-sm btn-primary edit-room-btn" data-room-type="text" data-room-id="${escapeHtml(room.room_id)}">Edit</button>
                             <button class="btn btn-sm btn-danger delete-text-room-btn" data-room-id="${escapeHtml(room.room_id)}">Delete</button>
                         </td>
@@ -624,7 +624,7 @@ include('includes/header.php');
                         <td>${escapeHtml(room.last_voice_message_by || '-')}</td>
                         <td>${escapeHtml(formatDateTime(room.created_at))}</td>
                         <td class="text-center">
-                            <a href="frontend/chat-dashboard.php" target="_blank" class="btn btn-sm btn-warning">Open</a>
+                            <a href="index.php" target="_blank" class="btn btn-sm btn-warning">Open</a>
                             <button class="btn btn-sm btn-primary edit-room-btn" data-room-type="voice" data-room-id="${escapeHtml(room.room_id)}">Edit</button>
                             <button class="btn btn-sm btn-danger delete-voice-room-btn" data-room-id="${escapeHtml(room.room_id)}">Delete</button>
                         </td>

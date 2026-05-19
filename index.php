@@ -4842,7 +4842,7 @@ const STRIPE_PUBLISHABLE_KEY = "<?= $_ENV['STRIPE_PUBLISHABLE_KEY'] ?>";
         closeMobileDrawers();
         document.body.classList.add('mobile-voice-drawer-open');
         setMobileNavActive(mobileVoiceBtn);
-        setTimeout(() => mobileVoiceRoomSearch?.focus(), 180);
+        // setTimeout(() => mobileVoiceRoomSearch?.focus(), 180);
     }
 
     function scrollMobileThreadToBottom(delay = 220) {

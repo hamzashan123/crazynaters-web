@@ -4786,8 +4786,8 @@ div#paymentCardElement {
     const dynamicPaymentPlansList = document.getElementById('dynamicPaymentPlansList');
     const paymentPlansLoading = document.getElementById('paymentPlansLoading');
     let paymentPlanBtns = [];
-    // const STRIPE_PUBLISHABLE_KEY = 'pk_test_w30dVAoGVlicUD5W814WQmFE00NdHpXmQt';
-const STRIPE_PUBLISHABLE_KEY = "<?= $_ENV['STRIPE_PUBLISHABLE_KEY'] ?>";
+    
+    const STRIPE_PUBLISHABLE_KEY = "<?= $_ENV['STRIPE_PUBLISHABLE_KEY'] ?>";
     const stripe = window.Stripe ? Stripe(STRIPE_PUBLISHABLE_KEY) : null;
 
     let currentUser = null;

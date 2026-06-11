@@ -2,6 +2,8 @@
 header('Content-Type: application/json');
 
 require_once __DIR__ . '/../bootstrap.php';
+require_once __DIR__ . '/../includes/db.php';
+require_once __DIR__ . '/../includes/stripe-settings-helper.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
@@ -19,7 +21,14 @@ $uid = isset($input['uid']) ? trim((string) $input['uid']) : '';
 //     echo json_encode(['error' => 'Invalid plan amount']);
 //     exit;
 // }
-$stripeSecretKey = $_ENV['STRIPE_SECRET_KEY'];
+$stripeKeys = get_active_stripe_keys($conn);
+$stripeSecretKey = $stripeKeys['secret_key'];
+
+if ($stripeSecretKey === '') {
+    http_response_code(500);
+    echo json_encode(['error' => 'Stripe secret key is not configured for the selected mode.']);
+    exit;
+}
 
 
 $payload = [

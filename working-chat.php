@@ -1,10 +1,6 @@
 
 <?php
 include('frontend/includes/header.php');
-include('includes/db.php');
-require_once __DIR__ . '/includes/stripe-settings-helper.php';
-$stripeKeys = get_active_stripe_keys($conn);
-$stripePublishableKey = $stripeKeys['publishable_key'];
 ?>
 
 <div class="container-fluid py-3 chat-neon-shell">
@@ -403,8 +399,7 @@ $stripePublishableKey = $stripeKeys['publishable_key'];
 
                 <div class="mb-3">
                     <label for="profileEmail" class="form-label">Email</label>
-                    <input type="email" id="profileEmail" class="form-control" placeholder="Update email address" readonly>
-                   
+                    <input type="email" id="profileEmail" class="form-control" placeholder="Email" disabled readonly>
                 </div>
 
                 <div class="mb-3">
@@ -4660,14 +4655,6 @@ div#paymentCardElement {
     const initialUrlParams = new URLSearchParams(window.location.search);
     const initialRoomIdFromUrl = (initialUrlParams.get('room_id') || '').trim();
     const initialRoomTypeFromUrl = (initialUrlParams.get('room_type') || initialUrlParams.get('type') || '').trim().toLowerCase();
-    const emailUpdatedFromUrl = initialUrlParams.get('email_updated') === '1';
-    const EMAIL_CHANGE_ENDPOINT = 'frontend/email-update-send-link.php';
-
-    function buildEmailChangeContinueUrl() {
-        const url = new URL(window.location.href);
-        url.searchParams.set('email_updated', '1');
-        return url.toString();
-    }
 
     function buildMobileRoomUrl(roomId) {
         const cleanRoomId = (roomId || '').trim();
@@ -4800,7 +4787,7 @@ div#paymentCardElement {
     const paymentPlansLoading = document.getElementById('paymentPlansLoading');
     let paymentPlanBtns = [];
     
-    const STRIPE_PUBLISHABLE_KEY = "<?= htmlspecialchars($stripePublishableKey, ENT_QUOTES) ?>";
+    const STRIPE_PUBLISHABLE_KEY = "<?= $_ENV['STRIPE_PUBLISHABLE_KEY'] ?>";
     const stripe = window.Stripe ? Stripe(STRIPE_PUBLISHABLE_KEY) : null;
 
     let currentUser = null;
@@ -7554,30 +7541,6 @@ div#paymentCardElement {
         }
     }
 
-    async function sendEmailChangeVerificationLink(newEmail) {
-        if (!currentUser || currentUser.isAnonymous) {
-            throw new Error('Please login before updating your email address.');
-        }
-
-        const idToken = await currentUser.getIdToken(true);
-        const response = await fetch(EMAIL_CHANGE_ENDPOINT, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                idToken,
-                newEmail,
-                continueUrl: buildEmailChangeContinueUrl()
-            })
-        });
-
-        const data = await response.json().catch(() => ({}));
-        if (!response.ok || !data.success) {
-            throw new Error(data.error || 'Failed to send email verification link.');
-        }
-
-        return data;
-    }
-
     async function saveProfileSettings() {
         if (!currentUser || currentUser.isAnonymous) {
             showProfileAlert('Guest users cannot update profile settings. Please register/login with email.', 'warning');
@@ -7586,19 +7549,11 @@ div#paymentCardElement {
 
         const newUsername = profileUsername ? profileUsername.value.trim() : '';
         const newFullName = profileName.value.trim();
-        const newEmail = profileEmail ? profileEmail.value.trim() : '';
-        const currentEmail = currentUser.email || '';
         const newPassword = profilePassword.value.trim();
         const newAvatarFile = profileAvatarFile.files[0] || null;
-        const emailChanged = Boolean(newEmail && newEmail.toLowerCase() !== currentEmail.toLowerCase());
 
         if (!newUsername || !newFullName) {
             showProfileAlert('Username and full name are required.', 'warning');
-            return;
-        }
-
-        if (!newEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail)) {
-            showProfileAlert('Please enter a valid email address.', 'warning');
             return;
         }
 
@@ -7631,17 +7586,8 @@ div#paymentCardElement {
                 newFullName
             );
 
-            if (emailChanged) {
-                await sendEmailChangeVerificationLink(newEmail);
-                await updateDoc(doc(db, 'users', currentUser.uid), {
-                    pending_email: newEmail,
-                    email_update_requested_at: serverTimestamp(),
-                    updated_at: serverTimestamp()
-                });
-            }
-
             renderCurrentUser();
-            showProfileAlert(emailChanged ? 'Profile updated. A verification link has been sent to your new email. Click that link to complete the email change.' : 'Profile updated successfully.', 'success');
+            showProfileAlert('Profile updated successfully.', 'success');
 
             if (activeMode === 'text' && selectedTextRoomId) {
                 await ensureParticipantInRoom(selectedTextRoomId, 'text');
@@ -7656,14 +7602,7 @@ div#paymentCardElement {
             }
         } catch (error) {
             console.error('Profile update error:', error);
-            const code = error?.code || '';
-            if (code === 'auth/requires-recent-login') {
-                showProfileAlert('Please logout and login again before changing sensitive profile details.', 'warning');
-            } else if (code === 'auth/weak-password') {
-                showProfileAlert('Password is too weak. Please use a stronger password.', 'warning');
-            } else {
-                showProfileAlert(error.message || 'Failed to update profile.');
-            }
+            showProfileAlert(error.message || 'Failed to update profile.');
         } finally {
             saveProfileBtn.disabled = false;
         }
@@ -8541,16 +8480,6 @@ div#paymentCardElement {
     onAuthStateChanged(auth, async (user) => {
         stopCurrentUserStatusListener();
         currentUser = user || null;
-
-        if (currentUser && emailUpdatedFromUrl) {
-            try {
-                await currentUser.reload();
-                currentUser = auth.currentUser || currentUser;
-            } catch (error) {
-                console.error('Email refresh after verification error:', error);
-            }
-        }
-
         const loadedProfile = await loadCurrentUserAvatar();
 
         if (currentUser && isUserBannedFromProfile(loadedProfile)) {
@@ -8567,12 +8496,6 @@ div#paymentCardElement {
             startCurrentUserStatusListener(currentUser);
             try {
                 await saveUserProfile(currentUser, getCurrentSenderName(), getCurrentSenderType(), currentAvatarUrl, currentFullName);
-
-                if (emailUpdatedFromUrl && window.history && window.history.replaceState) {
-                    const cleanUrl = new URL(window.location.href);
-                    cleanUrl.searchParams.delete('email_updated');
-                    window.history.replaceState({}, document.title, cleanUrl.toString());
-                }
 
                 if (selectedTextRoomId) await ensureParticipantInRoom(selectedTextRoomId, 'text');
                 if (selectedVoiceRoomId) await ensureParticipantInRoom(selectedVoiceRoomId, 'voice');

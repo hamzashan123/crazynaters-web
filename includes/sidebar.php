@@ -39,6 +39,14 @@
             </li>
         <?php } ?>
 
+        <?php if ($_SESSION['role'] == 'admin') { ?>
+            <li class="nav-item">
+                <a class="nav-link text-white" href="manage-stripe.php">
+                    <i class="fab fa-stripe-s"></i> <span>Manage Stripe</span>
+                </a>
+            </li>
+        <?php } ?>
+
         <li class="nav-item">
             <a class="nav-link text-white" href="settings.php">
                 <i class="fas fa-cogs"></i> <span>Settings</span>

@@ -12,7 +12,9 @@ $stripePublishableKey = $stripeKeys['publishable_key'];
         <div class="chat-neon-brand">
             <img src="./assets/images/logo.png" class="chat-neon-logo" alt="Chatroom Logo">
             <div class="chat-neon-title-wrap">
+                <a href="/" style="text-decoration:none !important">
                 <h1 class="chat-neon-title">Crazynaters.com</h1>
+                </a>
                 <p class="chat-neon-subtitle">Discover rooms, start conversations, and connect with others</p>
             </div>
         </div>
@@ -8592,7 +8594,7 @@ div#paymentCardElement {
         collection(db, 'chatrooms'),
         where('is_active', '==', true),
         orderBy('last_message_at', 'desc'),
-        limit(10)
+        limit(100)
     );
 
     onSnapshot(textRoomsQuery, async (snapshot) => {
@@ -8625,7 +8627,7 @@ div#paymentCardElement {
         collection(db, 'voice_chatrooms'),
         where('is_active', '==', true),
         orderBy('last_voice_message_at', 'desc'),
-        limit(10)
+        limit(100)
     );
 
     onSnapshot(voiceRoomsQuery, async (snapshot) => {

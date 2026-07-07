@@ -38,6 +38,21 @@ $stripePublishableKey = $stripeKeys['publishable_key'];
                 <i class="fas fa-cog"></i>
             </button>
 
+          
+
+            <a
+                target="_blank"
+                rel="noopener noreferrer"
+                href="https://play.google.com/store/apps/details?id=co.median.android.zjjqnw&hl=en_US&pli=1"
+                id="downloadapp"
+                class="google-play-btn"
+                title="Download on Google Play"
+                >
+                <img
+                    src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png"
+                    alt="Get it on Google Play"
+                />
+            </a>
             <div id="currentUserBox" class="top-current-user-box">
                 <span class="badge bg-light text-dark">Checking user...</span>
             </div>
@@ -1176,7 +1191,7 @@ $stripePublishableKey = $stripeKeys['publishable_key'];
     }
 
     .chat-neon-topbar {
-        grid-template-columns: minmax(250px, 1.05fr) minmax(260px, 520px) auto !important;
+        grid-template-columns: minmax(250px, 1.05fr) minmax(260px, 460px) auto !important;
         padding: 10px 8px 6px !important;
         gap: 18px !important;
         flex: 0 0 auto;
@@ -1203,7 +1218,16 @@ $stripePublishableKey = $stripeKeys['publishable_key'];
         flex: 0 0 auto;
     }
 
-    .top-voice-search { max-width: 560px; width: 100%; justify-self: stretch; }
+    .top-voice-search { max-width: 450px; width: 100%; justify-self: stretch; }
+    .google-play-btn {
+        display: inline-block;
+    }
+
+    .google-play-btn img {
+        height: 60px;
+        width: auto;
+        display: block;
+    }
     .header-control-cluster { justify-content: flex-end !important; flex-wrap: nowrap !important; gap: 12px !important; }
 
     .dashboard-main-layout {

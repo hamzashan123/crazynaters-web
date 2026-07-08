@@ -13,7 +13,7 @@ $stripePublishableKey = $stripeKeys['publishable_key'];
             <img src="./assets/images/logo.png" class="chat-neon-logo" alt="Chatroom Logo">
             <div class="chat-neon-title-wrap">
                 <a href="https://crazynaters.com" style="text-decoration:none !important">
-                <h1 class="chat-neon-title">Crazynaters.com</h1>
+                <h1 class="chat-neon-title">CrazyNaters.com</h1>
                 </a>
                 <p class="chat-neon-subtitle">Discover rooms, start conversations, and connect with others</p>
             </div>
